@@ -7,6 +7,7 @@ x_step = 1
 ray_degrees = degrees(atan(2/3))
 world_size = 40
 ray_y = 0
+ray_x = 2
 
 
 class Position2D:
@@ -68,16 +69,16 @@ def small_step_find(voxel_matrix: list[list[Voxel]], y_step: float) -> list[Voxe
     # global previous_y_position
 
     for i, x_axis in enumerate(voxel_matrix):
-        y_position = floor(y_step * (i + 1)) + ray_y
+        y_position = floor(y_step * (i + 1 + ray_x)) + ray_y
 
-        if (y_position >= max_value) or (y_position < 0):
+        if (y_position >= max_value) or (y_position < 0) or (i + ray_x >= max_value):
             continue
 
         # if y_position != previous_y_position:
         #     previous_y_position = y_position
         #     found_voxels.append(voxel_matrix[i - 1][y_position])
 
-        found_voxels.append(x_axis[y_position])
+        found_voxels.append(voxel_matrix[i + ray_x][y_position])
 
     return found_voxels
 
@@ -94,17 +95,17 @@ def large_step_find(voxel_matrix: list[list[Voxel]], x_step: float) -> list[Voxe
     max_value = len(voxel_matrix)
 
     for y in range(len(voxel_matrix)):
-        x_position = floor(abs(x_step * (y + 0)))
+        x_position = floor(abs(x_step * (y + 0 + ray_x)))
 
         if x_step < 0:
             y = -y
 
-        if (y + ray_y >= max_value) or (y + ray_y < 0):
+        if (y + ray_y >= max_value) or (y + ray_y < 0) or (x_position + ray_x >= max_value):
             continue
 
         # print(x_step * (y + 0), x_position, y + ray_y)
 
-        found_voxels.append(voxel_matrix[x_position][y + ray_y])
+        found_voxels.append(voxel_matrix[x_position + ray_x][y + ray_y])
 
     # transpose(found_voxels)
 
@@ -128,7 +129,7 @@ def enable_voxels(voxel_matrix: list[list[Voxel]], enabled_voxels: list[Voxel]):
     for voxel in enabled_voxels:
         # voxel_matrix[voxel.position.x][voxel.position.y].voxel_out = "▓"
         voxel_matrix[voxel.position.x][voxel.position.y].triggered = voxel.enabled
-        voxel_matrix[voxel.position.x][voxel.position.y].voxel_out = "▒" if not voxel.enabled else "▓"
+        voxel_matrix[voxel.position.x][voxel.position.y].voxel_out = "░" if not voxel.enabled else "▓"
 
         if voxel.enabled: return
 
@@ -160,13 +161,13 @@ def main():
     y_step = tan(ray_radians)
     triggered_voxels = find_voxels(voxel_world, y_step)
     enable_voxels(voxel_world, triggered_voxels)
-    print_voxels(voxel_world)
 
 
 if __name__ == "__main__":
     # ray_y = floor((world_size / 2) - 1)
     ray_y = 9
-    angle_step = 2/3
+    ray_x = 0
+    resolution = 2/3
 
     for i in range(10):
         voxel_world[9][i + 5].enabled = True
@@ -176,18 +177,22 @@ if __name__ == "__main__":
 
     voxel_world[3][9].enabled = True
 
-    for i in range(floor(180 / angle_step)):
-        start = time.time()
+    os.system("clear")
+    start = time.time()
+    for i in range(floor(180 / resolution)):
         # frac = input("Type in degrees: ")
-        os.system("clear")
         # ray_degrees = degrees(atan(eval(frac)))
-        ray_degrees = (i * angle_step) - 90
+        ray_degrees = (i * resolution) - 90
 
         main()
-        end = time.time()
 
-        print(end - start)
-        time.sleep((1 / 45) - (end - start))
+        # print(end - start)
+        # time.sleep((1 / 45) - (end - start))
+    end = time.time()
+
+    print_voxels(voxel_world)
+    print(end - start)
+    print(f"{1 / (end - start)} possible frames per second")
 
     # ray_degrees = -90
     # main()
